@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Stop Doom Scrolling",
+  "version": "1.1.0",
+  "description": "Interrupts doom scrolling on Facebook, Instagram, and YouTube with a reality-check post from @stop_doomscrolling_bitch",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.facebook.com/*",
+        "*://*.instagram.com/*",
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "core/state.js",
+        "core/suggestions.js",
+        "core/canvas.js",
+        "core/utils.js",
+        "core/doom.js",
+        "core/triggers.js",
+        "core/panel.js",
+        "platforms/instagram.js",
+        "platforms/facebook.js",
+        "platforms/youtube.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["suggestions.json", "styles/post.css", "styles/panel.css"],
+      "matches": [
+        "*://*.facebook.com/*",
+        "*://*.instagram.com/*",
+        "*://*.youtube.com/*"
+      ]
+    }
+  ]
+}

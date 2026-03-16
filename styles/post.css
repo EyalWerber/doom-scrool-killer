@@ -1,0 +1,163 @@
+/* ============================================================
+   Doom-scroll post — Shadow DOM styles
+   Injected via <link> into each post's shadow root.
+   ============================================================ */
+
+:host {
+  display: block;
+  width: 100%;
+  max-width: 614px;
+  margin: 12px auto;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+
+/* ── wrapper ── */
+.wrap {
+  background: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(180,30,30,0.28);
+  animation: pop .4s cubic-bezier(.22,1,.36,1);
+}
+.wrap.fb { border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.18), 0 4px 24px rgba(180,30,30,.22); }
+@keyframes pop {
+  from { opacity:0; transform: translateY(-12px) scale(.96); }
+  to   { opacity:1; transform: translateY(0)     scale(1);   }
+}
+
+/* ── header ── */
+.header {
+  display: flex; align-items: center;
+  padding: 12px 16px; gap: 10px;
+  border-bottom: 1px solid #f2f2f2;
+}
+.avatar { width:36px; height:36px; border-radius:50%; flex-shrink:0; border:2px solid #e53935; }
+.hinfo  { display:flex; flex-direction:column; flex:1; min-width:0; }
+.uname  { font-size:14px; font-weight:700; color:#262626; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sub    { font-size:11px; color:#8e8e8e; margin-top:1px; }
+.more   { font-size:16px; color:#8e8e8e; cursor:pointer; padding:4px 8px; flex-shrink:0; }
+
+/* ── image ── */
+.img-canvas { width:100%; display:block; }
+
+/* ── instagram actions ── */
+.ig-actions { display:flex; align-items:center; padding:8px 12px 4px; gap:14px; font-size:22px; }
+.ig-btn     { cursor:pointer; line-height:1; }
+.ig-bk      { margin-left:auto; }
+.ig-likes   { padding:0 16px 4px; font-size:14px; font-weight:700; color:#262626; }
+.ig-caption { padding:0 16px 8px; font-size:14px; color:#262626; line-height:1.5; }
+.ig-cuser   { font-weight:700; margin-right:4px; }
+.ig-time    { padding:0 16px 6px; font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:#8e8e8e; }
+
+/* ── facebook text ── */
+.fb-text { padding:12px 16px; font-size:15px; color:#050505; line-height:1.6; }
+
+/* ── facebook reactions ── */
+.fb-react { display:flex; justify-content:space-between; align-items:center; padding:8px 16px; font-size:14px; color:#65676b; border-top:1px solid #e4e6eb; }
+
+/* ── suggestion box ── */
+.sugg {
+  margin: 0 16px 12px;
+  padding: 11px 14px;
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+  border-left: 4px solid #ff9800;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+}
+.sugg strong { color: #e65100; }
+
+/* ── dismiss button ── */
+.dismiss {
+  display: block; width: 100%;
+  padding: 13px 16px;
+  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+  color: white; text-align: center; cursor: pointer;
+  font-size: 13px; font-weight: 700; letter-spacing: .5px;
+  border: none; border-top: 1px solid rgba(0,0,0,.1);
+  transition: background .18s;
+}
+.dismiss:hover { background: linear-gradient(135deg, #c62828 0%, #a31515 100%); }
+
+/* ── Reels fullscreen overlay ── */
+/* .reel-screen fills the fixed host, provides a semi-transparent dark bg  */
+/* so the blurred reel shows through, and centres the card.                */
+/* pointer-events:none on host + screen lets scroll events pass to IG.     */
+/* pointer-events:auto on .wrap makes the card itself interactive.         */
+.reel-screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+}
+:host(.reel-overlay) .wrap {
+  width: 380px;
+  max-width: 90vw;
+  position: relative;
+  pointer-events: auto;
+}
+
+/* ── YouTube video card ── */
+.yt-wrap {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 4px;
+  box-shadow: 0 2px 16px rgba(180,30,30,.26);
+  animation: pop .4s cubic-bezier(.22,1,.36,1);
+}
+.yt-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  position: relative;
+  background: #111;
+  overflow: hidden;
+}
+.yt-thumb-canvas { position:absolute; top:0; left:0; width:100%; height:100%; display:block; }
+.yt-duration {
+  position: absolute; bottom: 6px; right: 6px;
+  background: rgba(0,0,0,.88); color: #fff;
+  font-size: 12px; font-weight: 700;
+  padding: 2px 5px; border-radius: 4px; letter-spacing:.3px;
+}
+.yt-info  { display:flex; gap:10px; padding:10px 12px 4px; }
+.yt-avatar{ width:36px; height:36px; border-radius:50%; flex-shrink:0; }
+.yt-meta  { flex:1; min-width:0; }
+.yt-title { font-size:14px; font-weight:600; color:#0f0f0f; line-height:1.4; margin-bottom:3px; }
+.yt-chan  { font-size:13px; color:#606060; margin-bottom:1px; }
+.yt-views { font-size:13px; color:#606060; }
+
+/* ── YouTube Shorts card ── */
+.yt-shorts-wrap {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 4px;
+  box-shadow: 0 2px 16px rgba(180,30,30,.26);
+  animation: pop .4s cubic-bezier(.22,1,.36,1);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+.yt-shorts-img {
+  flex: 1;
+  position: relative;
+  background: #111;
+  overflow: hidden;
+  min-height: 360px;
+}
+.yt-shorts-img canvas { position:absolute; top:0; left:0; width:100%; height:100%; display:block; }
+.yt-shorts-handle {
+  padding: 14px 16px 4px;
+  font-size: 14px; font-weight: 700; color: #0f0f0f;
+}
+.yt-shorts-handle span { color: #1a73e8; }

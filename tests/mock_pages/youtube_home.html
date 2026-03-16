@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>YouTube</title>
+  <style>
+    body { margin: 0; height: 4000px; font-family: sans-serif; }
+    ytd-rich-grid-renderer { display: block; padding: 20px; }
+    ytd-rich-item-renderer { display: block; border: 1px solid #ccc; margin: 8px 0; padding: 16px; min-height: 150px; }
+  </style>
+</head>
+<body>
+  <ytd-rich-grid-renderer>
+    <div id="contents">
+      <ytd-rich-item-renderer data-testid="vid-1"><div>Video 1</div></ytd-rich-item-renderer>
+      <ytd-rich-item-renderer data-testid="vid-2"><div>Video 2</div></ytd-rich-item-renderer>
+      <ytd-rich-item-renderer data-testid="vid-3"><div>Video 3</div></ytd-rich-item-renderer>
+    </div>
+  </ytd-rich-grid-renderer>
+</body>
+</html>

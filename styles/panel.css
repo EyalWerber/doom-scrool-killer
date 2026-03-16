@@ -1,0 +1,131 @@
+/* ============================================================
+   Control panel — Shadow DOM styles
+   Injected via <link> into the panel's shadow root.
+   ============================================================ */
+
+:host {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.panel {
+  width: 224px;
+  background: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.ph {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px;
+  background: linear-gradient(135deg, #c62828, #e64a19);
+  cursor: grab; user-select: none;
+}
+.ph:active { cursor: grabbing; }
+.ph-icon  { font-size: 13px; }
+.ph-title { flex: 1; font-size: 12px; font-weight: 700; color: white; letter-spacing: .3px; }
+.ph-min {
+  background: rgba(255,255,255,.18); border: none; color: white;
+  width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+  font-size: 14px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding-bottom: 1px; transition: background .15s;
+}
+.ph-min:hover { background: rgba(255,255,255,.34); }
+
+/* ── Body ── */
+.pb { padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+
+/* Site chip */
+.site-chip {
+  display: flex; align-items: center; gap: 7px;
+  background: #282828; border-radius: 20px; padding: 5px 10px;
+  font-size: 12px; color: #ddd;
+}
+.site-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: #4caf50; box-shadow: 0 0 5px #4caf5088;
+}
+
+/* Timer */
+.timer-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 2px 2px 0;
+}
+.timer-lbl { font-size: 11px; color: #777; }
+.timer-val {
+  font-family: 'Courier New', monospace;
+  font-size: 20px; font-weight: 700; color: #4caf50; letter-spacing: 1px;
+  transition: color .4s;
+}
+.timer-val.warn   { color: #ff9800; }
+.timer-val.danger { color: #ef5350; }
+.timer-val.nuked  { color: #ef5350; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* Status badge */
+.status {
+  text-align: center; font-size: 11px; font-weight: 700;
+  padding: 4px 8px; border-radius: 20px; letter-spacing: .4px;
+  background: #1e3a1e; color: #81c784;
+}
+.status.warn   { background: #3a2d12; color: #ffb74d; }
+.status.nuked  { background: #3a1212; color: #ef9a9a; animation: blink 1s step-end infinite; }
+.status.paused { background: #2a2a2a; color: #777; }
+
+/* Divider */
+.div { border: none; border-top: 1px solid #2e2e2e; }
+
+/* Restart button */
+.restart-btn {
+  width: 100%; padding: 7px 10px;
+  background: #262626; border: 1px solid #3a3a3a; border-radius: 6px;
+  color: #ccc; font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: background .15s, color .15s; letter-spacing: .3px;
+}
+.restart-btn:hover { background: #333; color: #fff; }
+
+/* Bypass rows */
+.bypass-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bypass-lbl { font-size: 12px; color: #bbb; line-height: 1.4; }
+.bypass-lbl small { font-size: 10px; color: #555; display: block; margin-top: 1px; }
+
+/* Toggle switch */
+.switch { position: relative; width: 34px; height: 19px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.slider {
+  position: absolute; inset: 0; background: #444;
+  border-radius: 19px; cursor: pointer; transition: background .2s;
+}
+.slider:before {
+  content: ''; position: absolute;
+  width: 13px; height: 13px; left: 3px; top: 3px;
+  background: #777; border-radius: 50%;
+  transition: transform .2s, background .2s;
+}
+input:checked + .slider { background: #c62828; }
+input:checked + .slider:before { transform: translateX(15px); background: white; }
+
+/* Settings section */
+.settings-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .7px; color: #555;
+}
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.settings-lbl { font-size: 12px; color: #bbb; }
+.settings-right { display: flex; align-items: center; gap: 4px; }
+.settings-input {
+  width: 48px; padding: 3px 6px; text-align: right;
+  background: #262626; border: 1px solid #3a3a3a; border-radius: 4px;
+  color: #ddd; font-size: 12px;
+}
+.settings-input:focus { outline: none; border-color: #c62828; }
+.settings-unit { font-size: 11px; color: #555; }

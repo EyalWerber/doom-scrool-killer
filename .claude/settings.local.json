@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -oP '.{0,200}data-visualcompletion=\"\"\"\"ignore-dynamic\"\"\"\".{0,500}' \"i:/I_do/Programing/vibe/doom-scroll-stopper/page_htmls/Instagram_account_page.html\")"
+    ]
+  }
+}
