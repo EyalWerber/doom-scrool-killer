@@ -24,6 +24,25 @@
 
   DSS.registerPlatform(platform);
 
+  // ── Skip activation on login / signup pages ───────────────
+  const _skipPaths = ['/accounts/login', '/accounts/signup', '/accounts/emailsignup'];
+  if (_skipPaths.some(p => location.pathname.startsWith(p))) {
+    // Show a subtle indicator so the user knows DSS is waiting for login
+    document.addEventListener('DOMContentLoaded', () => {
+      const ind = document.createElement('div');
+      ind.id = 'dss-login-indicator';
+      ind.setAttribute('data-dss-indicator', 'true');
+      ind.style.cssText =
+        'position:fixed;bottom:16px;right:16px;z-index:2147483647;' +
+        'background:rgba(20,20,20,0.75);color:#555;font-size:10px;' +
+        'padding:4px 10px;border-radius:6px;font-family:sans-serif;' +
+        'pointer-events:none;letter-spacing:.3px;';
+      ind.textContent = '⏸ DSS inactive';
+      document.body.appendChild(ind);
+    });
+    return; // do not initialise triggers or panel
+  }
+
   // ── Init ──────────────────────────────────────────────────
   function init() {
     // Guard against double-init on SPA re-injection: if state was preserved

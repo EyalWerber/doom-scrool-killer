@@ -17,9 +17,11 @@
   // Apply saved nuke timer setting as early as possible so setupTimeTrigger()
   // uses the correct value. The storage read is async but typically resolves
   // before document_idle content scripts run.
-  chrome.storage.sync.get(['nukeMinutes'], r => {
-    if (r.nukeMinutes && typeof r.nukeMinutes === 'number' && r.nukeMinutes >= 1) {
-      DSS.CONFIG.timeLimit = r.nukeMinutes * 60 * 1000;
+  chrome.storage.sync.get(['nukeMinutes', 'nukeSeconds'], r => {
+    const mins = (r.nukeMinutes && typeof r.nukeMinutes === 'number') ? r.nukeMinutes : null;
+    const secs = (typeof r.nukeSeconds === 'number') ? r.nukeSeconds : 0;
+    if (mins !== null) {
+      DSS.CONFIG.timeLimit = Math.max(5000, (mins * 60 + secs) * 1000);
     }
   });
 

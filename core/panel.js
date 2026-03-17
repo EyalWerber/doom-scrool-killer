@@ -156,34 +156,70 @@
     nukeTimeLbl.textContent = 'Nuke timer';
     const nukeTimeRight = document.createElement('div');
     nukeTimeRight.className = 'settings-right';
-    const nukeTimeInput = document.createElement('input');
-    nukeTimeInput.type    = 'number';
-    nukeTimeInput.className = 'settings-input';
-    nukeTimeInput.min   = '1';
-    nukeTimeInput.max   = '120';
-    nukeTimeInput.step  = '1';
-    nukeTimeInput.value = Math.round(DSS.CONFIG.timeLimit / 60000);
+
+    const nukeMinInput = document.createElement('input');
+    nukeMinInput.type = 'number';
+    nukeMinInput.className = 'settings-input';
+    nukeMinInput.min = '0'; nukeMinInput.max = '120'; nukeMinInput.step = '1';
+
+    const nukeSecInput = document.createElement('input');
+    nukeSecInput.type = 'number';
+    nukeSecInput.className = 'settings-input';
+    nukeSecInput.min = '0'; nukeSecInput.max = '59'; nukeSecInput.step = '1';
+
+    // Populate inputs from current timeLimit
+    function _populateTimeInputs(ms) {
+      const totalSec = Math.round(ms / 1000);
+      nukeMinInput.value = Math.floor(totalSec / 60);
+      nukeSecInput.value = totalSec % 60;
+    }
+    _populateTimeInputs(DSS.CONFIG.timeLimit);
+
     // Re-read storage directly in case the async state.js read hasn't resolved yet.
-    chrome.storage.sync.get(['nukeMinutes'], r => {
-      if (r.nukeMinutes && typeof r.nukeMinutes === 'number' && r.nukeMinutes >= 1) {
-        nukeTimeInput.value = r.nukeMinutes;
+    chrome.storage.sync.get(['nukeMinutes', 'nukeSeconds'], r => {
+      const mins = (r.nukeMinutes && typeof r.nukeMinutes === 'number') ? r.nukeMinutes : null;
+      const secs = (typeof r.nukeSeconds === 'number') ? r.nukeSeconds : 0;
+      if (mins !== null) {
+        nukeMinInput.value = mins;
+        nukeSecInput.value = secs;
       }
     });
-    const nukeTimeUnit = document.createElement('span');
-    nukeTimeUnit.className   = 'settings-unit';
-    nukeTimeUnit.textContent = 'min';
-    nukeTimeInput.addEventListener('change', () => {
-      const mins = Math.max(1, Math.min(120, parseInt(nukeTimeInput.value, 10) || 7));
-      nukeTimeInput.value      = mins;
-      DSS.CONFIG.timeLimit     = mins * 60 * 1000;
-      chrome.storage.sync.set({ nukeMinutes: mins });
+
+    function _applyNukeTime() {
+      const mins = Math.max(0, Math.min(120, parseInt(nukeMinInput.value, 10) || 0));
+      const secs = Math.max(0, Math.min(59,  parseInt(nukeSecInput.value, 10) || 0));
+      // Enforce a minimum of 5 seconds total
+      const totalMs = Math.max(5000, (mins * 60 + secs) * 1000);
+      nukeMinInput.value   = Math.floor(totalMs / 60000);
+      nukeSecInput.value   = Math.round((totalMs % 60000) / 1000);
+      DSS.CONFIG.timeLimit = totalMs;
+      chrome.storage.sync.set({ nukeMinutes: nukeMinInput.value * 1, nukeSeconds: nukeSecInput.value * 1 });
       DSS.restartTimer();
       timerVal.textContent = '00:00';
       timerVal.className   = 'timer-val';
       status.textContent   = '✅ Active';
       status.className     = 'status';
-    });
-    nukeTimeRight.append(nukeTimeInput, nukeTimeUnit);
+    }
+
+    nukeMinInput.addEventListener('change', _applyNukeTime);
+    nukeSecInput.addEventListener('change', _applyNukeTime);
+
+    const nukeMinWrap = document.createElement('div');
+    nukeMinWrap.className = 'time-field';
+    const nukeMinLbl = document.createElement('span');
+    nukeMinLbl.className = 'time-lbl'; nukeMinLbl.textContent = 'm';
+    nukeMinWrap.append(nukeMinLbl, nukeMinInput);
+
+    const nukeSep = document.createElement('span');
+    nukeSep.className = 'settings-sep'; nukeSep.textContent = ':';
+
+    const nukeSecWrap = document.createElement('div');
+    nukeSecWrap.className = 'time-field';
+    const nukeSecLbl = document.createElement('span');
+    nukeSecLbl.className = 'time-lbl'; nukeSecLbl.textContent = 's';
+    nukeSecWrap.append(nukeSecLbl, nukeSecInput);
+
+    nukeTimeRight.append(nukeMinWrap, nukeSep, nukeSecWrap);
     nukeTimeRow.append(nukeTimeLbl, nukeTimeRight);
     pb.appendChild(nukeTimeRow);
 

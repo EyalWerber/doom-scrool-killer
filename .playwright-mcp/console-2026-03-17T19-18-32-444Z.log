@@ -1,0 +1,55 @@
+[     922ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    1091ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    1095ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    4086ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    4255ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    4256ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    7256ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    7257ms] [ERROR] ErrorUtils caught an error:
+
+ [Caught in: Failed call to /ajax/bulk-route-definitions/: CometAyncFetchError: HTTP_CLIENT_ERROR..access-control-allow-credentials: true
+access-control-allow-methods: OPTIONS
+access-control-allow-origin: https://www.instagram.com
+access-control-expose-headers: X-FB-Debug, X-Loader-Length, Error-MID, X-FB-Trace-ID, X-Stack
+alt-svc: h3=":443"; ma=86400
+cache-control: private, no-cache, no-store, must-revalidate
+content-length: 0
+content-security-policy: default-src *.facebook.com *.fbcdn.net *.instagram.com blob:;script-src *.instagram.com static.cdninstagram.com *.facebook.com *.fbcdn.net *.facebook.net 127.0.0.1:* 'nonce-oSyWU5PI' blob: 'self' 'wasm-unsafe-eval' https://*.google-analytics.com https://translate.google.com https://apis.google.com https://accounts.google.com;style-src *.instagram.com static.cdninstagram.com data: blob: 'unsafe-inline' *.fbcdn.net *.facebook.com https://accounts.google.com;connect-src *.instagram.com wss://edge-chat.instagram.com connect.facebook.net *.facebook.com facebook.com *.fbcdn.net *.facebook.net wss://*.facebook.com:* ws://localhost:* blob: *.cdninstagram.com wss://*.instagram.com:* 'self' https://accounts.google.com;font-src *.instagram.com static.cdninstagram.com data: *.fbcdn.net *.intern.facebook.com *.facebook.com https://fonts.gstatic.com;img-src *.instagram.com *.facebook.com *.fbcdn.net data: *.cdninstagram.com *.whatsapp.net blob: *.fbsbx.com android-webview-video-poster: *.oculuscdn.com *.giphy.com *.tenor.co *.tenor.com www.googleadservices.com *.doubleclick.net *.google.com *.google.co.uk https://www.gstatic.com https://*.google-analytics.com;media-src *.facebook.com *.fbcdn.net *.instagram.com *.cdninstagram.com *.fbsbx.com data: blob: https://*.giphy.com *.tenor.co *.tenor.com;child-src *.facebook.com *.fbcdn.net *.instagram.com data: blob:;frame-src *.instagram.com *.facebook.com *.fbsbx.com fbsbx.com data: www.googleadservices.com *.doubleclick.net *.google.com *.google.co.uk;manifest-src *.facebook.com *.fbcdn.net *.instagram.com data: blob:;object-src *.facebook.com *.fbcdn.net *.instagram.com data: blob:;block-all-mixed-content;upgrade-insecure-requests;
+content-type: text/html; charset="utf-8"
+cross-origin-opener-policy: same-origin-allow-popups
+cross-origin-opener-policy-report-only: restrict-properties;report-to="coop_report"
+cross-origin-resource-policy: same-site
+date: Tue, 17 Mar 2026 19:18:40 GMT
+document-policy: force-load-at-top, include-js-call-stacks-in-crash-reports
+expires: Sat, 01 Jan 2000 00:00:00 GMT
+origin-agent-cluster: ?1
+origin-trial: ApxEQ+svJ/BvQ8JtSJdDsnwv/gOXedkcox0XU8+snS3w6b4nSgDoyEms+0jGopE4SIRVvlqJmzPHqZYbkP0sxwgAAAB1eyJvcmlnaW4iOiJodHRwczovL3d3dy5mYWNlYm9vay5jb206NDQzIiwiZmVhdHVyZSI6IkNyYXNoUmVwb3J0aW5nU3RvcmFnZUFQSSIsImV4cGlyeSI6MTc3NjcyOTYwMCwiaXNTdWJkb21haW4iOnRydWV9
+permissions-policy: accelerometer=(self), attribution-reporting=(), autoplay=(), bluetooth=(), camera=(self), ch-device-memory=(), ch-downlink=(), ch-dpr=(), ch-ect=(), ch-rtt=(), ch-save-data=(), ch-ua-arch=(), ch-ua-bitness=(), ch-viewport-height=(), ch-viewport-width=(), ch-width=(), clipboard-read=(), clipboard-write=(self), compute-pressure=(), display-capture=(self), encrypted-media=(), fullscreen=(self), gamepad=(), geolocation=(self), gyroscope=(self), hid=(), idle-detection=(), interest-cohort=(), keyboard-map=(), local-fonts=(), magnetometer=(), microphone=(self), midi=(), otp-credentials=(self), payment=(), picture-in-picture=(self), private-state-token-issuance=(), publickey-credentials-get=(self "https://*.facebook.com" "https://facebook.com"), screen-wake-lock=(), serial=(), shared-storage=(), shared-storage-select-url=(), private-state-token-redemption=(), usb=(), unload=(self), window-management=(), xr-spatial-tracking=();report-to="permissions_policy"
+pragma: no-cache
+priority: u=1,i
+proxy-status: http_request_error; e_fb_vipaddr="AcOqQg-Wb5Jm6jHCDlw7EyojOk2Tdwmqyxjusf9uO7jowRO_-fIz6n3CamrqHd9kqmHc6Kq591gVfz01l5bMtnx-Hgz5n5jP6-FBWYhF"; e_clientaddr="AcOl-AyZBfbuIbQXWV2YKpDshvKZERiN5d7ZYBbmw8lcoPU8ZryNZBGbNX08Te3EIINNSrrd4tNxDlmQ42-JVrkVVbqSygEIsWTRC9zQAwXGTCjFvw"; e_upip="AcN05x0Vn3DAmVA6kO0_uvoXMOD83tIqSA7JS81y9X-lf76y8XulW0DbYiRg68f5QnYyTkDWgqNOJ0vivo-oB59bNvAWYGvhXeAqUKmzCM8"; e_fb_zone="AcOn_pPbTXq366jrWysCEkCPqvQ2Lqr_9td8MDVtDl1e94HyG21BppW8phO4M-oB"; e_fb_twtaskhandle="AcPPyXpqYfMoS6c6h7sXw-epYY5DwO9JWpCWJ3vU1h_RxL2f9Ah7aDg0xRQKKZlKMrkcH6YlRigLSmwp2yAspRX87UDJEqMHCNaEdtTKaQ"; e_proxy="AcPB3Lu4yJ3EaaCcU0bXSCw8h8HxfFsawsSRwTkZ3gvfbfwbGcJ6cwudx7_ZEnCZnRS-ztKD4mT2MgGVAAeE", http_request_error; e_fb_vipaddr="AcOyp7rLVRsdzjHVl8OeH1SsmqLh-P2sdi8ZrOsg1AeVnQXyTJID2drN9F8eux1rIFHQMxPW4A-jinaQ2TR-zxgCeRDAHeX-UVoqFA"; e_clientaddr="AcNGAVNGRPcaYpGAVLHQT_6pneNGFMsvfa0QHL5HnIsFWKVLZ1anRJ4JXFRcBGj6AsD0qAJ90nOI5aontU3rLHSwEh-85If7YB0CtgVQPigvp4Z0pxaD"; e_upip="AcNU8ngs6-Uvbq9gWPcM3UnzHED4q4URqtHYEdbFJTyqvl9U8TlPgCbWh2tjUrNoJ_I64RkC7MMxDQxSpHAW0LgH9MjGgBcZMLibbZv_"; e_fb_zone="AcMXRX4UommLKIFhpqHHUrXOAgNf2TuWckyG98IouiDezif_sJkUeiOM-gohoA"; e_fb_twtaskhandle="AcMMtDEfmSqWArG7selzQlC5jYinz9wl4RRiihydWjiCBpxUWnNuJUv-lv0W9JDR-_yoyLnqJf9uyiA6Hh9kEVEP9nAlyHJULM-o"; e_proxy="AcN1fg2tTOG8VZiPqSQGXk73dzWqdbG4lATecvwgVd115n3AhJ4Kqxqn0YJ-fXHK-7jlPFyCLFWz-5nZ"
+report-to: {"max_age":2592000,"endpoints":[{"url":"https:\/\/www.facebook.com\/browser_reporting\/coop\/?minimize=0"}],"group":"coop_report","include_subdomains":true}, {"max_age":259200,"endpoints":[{"url":"https:\/\/www.instagram.com\/error\/ig_web_error_reports\/?device_level=unknown&brsid=7618306131464073730&comet_app_key=7&cpp=C3&cv=1035339063&st=1773775120530"}]}
+reporting-endpoints: coop_report="https://www.facebook.com/browser_reporting/coop/?minimize=0", default="https://www.instagram.com/error/ig_web_error_reports/?device_level=unknown&brsid=7618306131464073730&comet_app_key=7&cpp=C3&cv=1035339063&st=1773775120530"
+strict-transport-security: max-age=31536000; preload; includeSubDomains
+vary: Origin
+x-content-type-options: nosniff
+x-fb-connection-quality: EXCELLENT; q=0.9, rtt=43, rtx=0, c=120, mss=1232, tbw=164777, tp=187, tpl=0, uplat=116, ullat=0
+x-fb-debug: 6kH7IivqEk2Bk0T44IYAZw0MQkLFQElAeYJ5mPDreu62rZwAIQZ1Fvcy9jcW+Iac3o2sUxAVBbIPDI0X/X98SQ==
+x-frame-options: DENY
+x-stack: www
+x-xss-protection: 0
+.XMLHttpRequest.HTTP 429.]
+
+Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs. {clientTime: 1773775119, extra: Object, guardList: Array(0), hash: v2kapn, isNormalizedError: true} @ https://static.cdninstagram.com/rsrc.php/v4/y6/r/0vWWUvN3B1V.js:78
+[    7421ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[    7422ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   15476ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   18637ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   21810ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   28846ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   32008ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   35163ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   56779ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   59385ms] [ERROR] Permissions policy violation: unload is not allowed in this document. @ https://static.xx.fbcdn.net/rsrc.php/v4/y_/r/zGb1-N3C4g8.js:335
+[   59940ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
+[   63099ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://www.instagram.com/ajax/bulk-route-definitions/:0
