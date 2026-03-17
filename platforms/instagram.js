@@ -227,6 +227,15 @@
         return;
       }
 
+      // Grid pages (account/explore): only watch for nuke mode — no early doom posts.
+      if (isGridPage()) {
+        setupObserver(feed, postSel);
+        if (DSS.state.nukeMode) {
+          feed.querySelectorAll(`${postSel}:not([data-doom-scroll-post])`).forEach(DSS.nukePost);
+        }
+        return;
+      }
+
       // Fresh counters — this is a new page visit.
       DSS.state.postsSeen     = 0;
       DSS.state.nextTriggerAt = DSS.newTriggerAt();
@@ -261,12 +270,12 @@
       if (_navTimer)     { clearTimeout(_navTimer);    _navTimer     = null; }
       DSS.state.lastDoomPostTime = 0;
 
-      // Restore any videos blurred by the reels overlay.
+      // Remove ALL doom posts from the previous page — Instagram's React
+      // replaces the feed content but may leave the doom post's parent node
+      // intact, causing stale posts to persist into the next page visit.
+      document.querySelectorAll('[data-doom-scroll-post]').forEach(el => el.remove());
       _reelBlurredVideos.forEach(v => v.style.removeProperty('filter'));
       _reelBlurredVideos = [];
-      // Also remove any reel doom posts still in the DOM (Instagram may keep
-      // container elements alive across navigations).
-      document.querySelectorAll('[data-doom-scroll-post].reel-overlay').forEach(el => el.remove());
 
       // Give React ~800 ms to render the new page before latching.
       _navTimer = setTimeout(latch, 800);
@@ -309,7 +318,13 @@
 
     getChipLabel() { return '📸 Instagram'; },
 
-    isOnFeedPage() { return getPageType() !== null; },
+    // Grid pages (account profiles, explore) don't get early doom posts —
+    // a full card inside a thumbnail grid looks wrong. Nuke mode still works
+    // because nukePost() is called directly and bypasses this check.
+    isOnFeedPage() {
+      const t = getPageType();
+      return t === 'home' || t === 'reels';
+    },
 
     // Selector per page type:
     //   grid (explore/account) → thumbnail links
@@ -377,10 +392,16 @@
     setupPostCountTrigger() {
       const postSel = this.getPostSel();
       const feedSel = this.getFeedSel();
+
+      // Grid pages only need the observer for nuke mode — no doom-post counting.
+      if (isGridPage()) {
+        const feed = document.querySelector(feedSel);
+        if (feed) setupObserver(feed, postSel);
+        return;
+      }
+
       const feed = document.querySelector(feedSel);
       if (feed) {
-        // Seed so the threshold is relative to already-visible posts
-        // (user already saw them; fire after N *new* posts load).
         DSS.state.postsSeen     = feed.querySelectorAll(postSel).length;
         DSS.state.nextTriggerAt = DSS.newTriggerAt();
         setupObserver(feed, postSel);

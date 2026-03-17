@@ -32,13 +32,13 @@
     if (!_platform.isOnFeedPage()) return;
 
     // Cooldown: in normal mode, wait at least 30 s between doom posts.
-    // Prevents the scroll-cascade on Instagram where inserting a post
-    // triggers infinite scroll → more posts → counter fires again.
+    // Stamp lastDoomPostTime BEFORE the async getSuggestions() call so that
+    // two triggers firing simultaneously both see the lock and only one wins.
     const now = Date.now();
     if (reason !== 'popup-preview' && !DSS.state.nukeMode) {
       if (now - DSS.state.lastDoomPostTime < 30_000) return;
     }
-    DSS.state.lastDoomPostTime = now;
+    DSS.state.lastDoomPostTime = now; // claim the slot synchronously
 
     console.log('[StopDoomScroll] Inserting post — trigger:', reason);
 

@@ -25,10 +25,14 @@
       const rect = host.getBoundingClientRect();
       const ox = e.clientX - rect.left, oy = e.clientY - rect.top;
       const onMove = e => {
-        const x = Math.max(0, Math.min(e.clientX - ox, window.innerWidth  - rect.width));
-        const y = Math.max(0, Math.min(e.clientY - oy, window.innerHeight - rect.height));
-        host.style.left = x + 'px'; host.style.top = y + 'px';
-        host.style.right = 'auto'; host.style.bottom = 'auto';
+        const vw = document.documentElement.clientWidth;   // excludes scrollbar
+        const vh = document.documentElement.clientHeight;
+        const x = Math.max(0, Math.min(e.clientX - ox, vw - rect.width));
+        const y = Math.max(0, Math.min(e.clientY - oy, vh - rect.height));
+        host.style.left   = x + 'px';
+        host.style.bottom = (vh - y - rect.height) + 'px';
+        host.style.right  = 'auto';
+        host.style.top    = 'auto';
       };
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
@@ -60,8 +64,6 @@
     const phMin = document.createElement('button');
     phMin.className = 'ph-min'; phMin.textContent = '−'; phMin.title = 'Minimize';
     ph.append(phIcon, phTitle, phMin);
-    panel.appendChild(ph);
-
     // ── Body ──
     const pb = document.createElement('div');
     pb.className = 'pb';
@@ -161,6 +163,12 @@
     nukeTimeInput.max   = '120';
     nukeTimeInput.step  = '1';
     nukeTimeInput.value = Math.round(DSS.CONFIG.timeLimit / 60000);
+    // Re-read storage directly in case the async state.js read hasn't resolved yet.
+    chrome.storage.sync.get(['nukeMinutes'], r => {
+      if (r.nukeMinutes && typeof r.nukeMinutes === 'number' && r.nukeMinutes >= 1) {
+        nukeTimeInput.value = r.nukeMinutes;
+      }
+    });
     const nukeTimeUnit = document.createElement('span');
     nukeTimeUnit.className   = 'settings-unit';
     nukeTimeUnit.textContent = 'min';
@@ -180,6 +188,7 @@
     pb.appendChild(nukeTimeRow);
 
     panel.appendChild(pb);
+    panel.appendChild(ph);
     shadow.appendChild(panel);
     document.body.appendChild(host);
 
