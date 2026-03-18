@@ -27,8 +27,10 @@
   // ── Skip activation on login / signup pages ───────────────
   const _skipPaths = ['/accounts/login', '/accounts/signup', '/accounts/emailsignup'];
   if (_skipPaths.some(p => location.pathname.startsWith(p))) {
-    // Show a subtle indicator so the user knows DSS is waiting for login
-    document.addEventListener('DOMContentLoaded', () => {
+    // Show a subtle indicator so the user knows DSS is waiting for login.
+    // Use the same readyState guard as init() — DOMContentLoaded may have
+    // already fired by the time the content script runs.
+    const _appendIndicator = () => {
       const ind = document.createElement('div');
       ind.id = 'dss-login-indicator';
       ind.setAttribute('data-dss-indicator', 'true');
@@ -39,7 +41,12 @@
         'pointer-events:none;letter-spacing:.3px;';
       ind.textContent = '⏸ DSS inactive';
       document.body.appendChild(ind);
-    });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _appendIndicator);
+    } else {
+      _appendIndicator();
+    }
     return; // do not initialise triggers or panel
   }
 

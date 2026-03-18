@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Explore • Instagram</title>
+  <style>
+    body  { margin: 0; height: 4000px; font-family: sans-serif; }
+    main  { padding: 20px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+    }
+    .grid a {
+      display: block;
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      background: #ccc;
+      text-decoration: none;
+      color: #333;
+      font-size: 12px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="grid">
+      <a href="/p/post1/" data-testid="thumb-1">Post 1</a>
+      <a href="/p/post2/" data-testid="thumb-2">Post 2</a>
+      <a href="/p/post3/" data-testid="thumb-3">Post 3</a>
+    </div>
+  </main>
+</body>
+</html>

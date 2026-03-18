@@ -7,11 +7,107 @@
   const DSS = window.DSS;
   DSS.platforms = DSS.platforms || {};
 
+  // ── Compact overlay for grid thumbnails (account / explore) ─
+  // The full feed-post design (header + canvas + actions) is too tall for a
+  // small square thumbnail. This builds a minimal dark overlay that fits.
+  function buildGridPost(suggestion) {
+    const nukeMode = DSS.state.nukeMode;
+
+    const host = document.createElement('div');
+    host.setAttribute('data-doom-scroll-post', 'true');
+
+    // Block ALL clicks on the overlay from reaching the parent <a> tag.
+    host.addEventListener('click', e => e.stopPropagation());
+    // Ensure the host is a positioning context so the absolute overlay fills it.
+    host.style.setProperty('position', 'relative', 'important');
+
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    const style = document.createElement('style');
+    style.textContent = `
+      :host {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: ${nukeMode ? '#000' : 'rgba(0,0,0,0.85)'};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        box-sizing: border-box;
+        gap: 5px;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        overflow: hidden;
+      }
+      .icon  { font-size: 26px; line-height: 1; }
+      .title { color: #fff; font-weight: 800; font-size: 12px; text-align: center; letter-spacing: .5px; }
+      .sugg  { color: #bbb; font-size: 9px; text-align: center; line-height: 1.3; }
+      .dismiss {
+        margin-top: 4px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 20px;
+        color: #fff;
+        font-size: 9px;
+        cursor: pointer;
+        padding: 3px 10px;
+        white-space: nowrap;
+      }
+      .dismiss:hover { background: rgba(255,255,255,0.22); }
+    `;
+    shadow.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+
+    const icon  = document.createElement('div');
+    icon.className = 'icon';
+    icon.textContent = '🛑';
+
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = 'STOP SCROLLING';
+
+    const sugg = document.createElement('div');
+    sugg.className = 'sugg';
+    sugg.textContent = suggestion;
+
+    // In nuke mode the post is permanently blocked — no dismiss button.
+    if (nukeMode) {
+      overlay.append(icon, title, sugg);
+    } else {
+      const dismiss = document.createElement('button');
+      dismiss.className = 'dismiss';
+      dismiss.textContent = '✕  Ok, I get it';
+      dismiss.addEventListener('click', e => {
+        e.stopPropagation();
+        host.style.transition = 'opacity .2s';
+        host.style.opacity = '0';
+        setTimeout(() => host.remove(), 220);
+      });
+      overlay.append(icon, title, sugg, dismiss);
+    }
+
+    shadow.appendChild(overlay);
+    return host;
+  }
+
   // ── Post builder ─────────────────────────────────────────
   function buildPost(suggestion) {
     const host = document.createElement('div');
     host.setAttribute('data-doom-scroll-post', 'true');
 
+    // Block ALL clicks on the overlay from reaching the parent article/container.
+    // Shadow DOM events cross the shadow boundary and re-appear on the host —
+    // without this, clicks open the post even when the doom overlay is visible.
+    host.addEventListener('click', e => e.stopPropagation());
+
+    const nukeMode = DSS.state.nukeMode;
     const onReels = getPageType() === 'reels';
 
     // Collect hidden videos so the dismiss handler can restore them.
@@ -99,27 +195,27 @@
     time.className = 'ig-time'; time.textContent = 'just now';
     wrap.appendChild(time);
 
-    // Dismiss button
-    const dismiss = document.createElement('button');
-    dismiss.className = 'dismiss';
-    dismiss.textContent = "✕  Ok, I get it — I'll go touch grass";
-    dismiss.addEventListener('click', () => {
-      // Restore any videos that were hidden for the reels overlay.
-      hiddenVideos.forEach(v => v.style.removeProperty('filter'));
-      hiddenVideos = [];
-
-      host.style.transition = 'opacity .3s, transform .3s';
-      host.style.opacity = '0';
-      host.style.transform = 'scale(.97)';
-      setTimeout(() => host.remove(), 350);
-    });
-    wrap.appendChild(dismiss);
+    // In nuke mode posts are permanently blocked — no dismiss button.
+    if (!nukeMode) {
+      const dismiss = document.createElement('button');
+      dismiss.className = 'dismiss';
+      dismiss.textContent = "✕  Ok, I get it — I'll go touch grass";
+      dismiss.addEventListener('click', e => {
+        e.stopPropagation();
+        hiddenVideos.forEach(v => v.style.removeProperty('filter'));
+        hiddenVideos = [];
+        host.style.transition = 'opacity .3s, transform .3s';
+        host.style.opacity = '0';
+        host.style.transform = 'scale(.97)';
+        setTimeout(() => host.remove(), 350);
+      });
+      wrap.appendChild(dismiss);
+    }
 
     if (onReels) {
-      // Inner wrapper handles the dark background + centering within the
-      // fixed host. Keeps shadow :host CSS rules from fighting the layout.
       const screen = document.createElement('div');
       screen.className = 'reel-screen';
+      if (nukeMode) screen.style.background = '#000';
       screen.appendChild(wrap);
       shadow.appendChild(screen);
     } else {
@@ -169,6 +265,7 @@
 
   // ── MutationObserver-based post counter ──────────────────
   let _feedObserver = null;
+  let _gridSweepTimer = null;    // periodic sweep for grid pages (backstop vs virtual scroll)
   // Videos blurred by the reels overlay — tracked for nav cleanup.
   let _reelBlurredVideos = [];
 
@@ -190,13 +287,14 @@
     }
   }
 
-  // Selector that excludes both doom posts and already-decided real posts.
+  // Selector that excludes doom posts, already-decided, and already-nuked posts.
   function _newPostSel(postSel) {
-    return `${postSel}:not([data-doom-scroll-post]):not([data-dss-seen])`;
+    return `${postSel}:not([data-doom-scroll-post]):not([data-dss-seen]):not([data-doom-hidden])`;
   }
 
   function setupObserver(feed, postSel) {
     if (_feedObserver) { _feedObserver.disconnect(); _feedObserver = null; }
+    if (_gridSweepTimer) { clearInterval(_gridSweepTimer); _gridSweepTimer = null; }
 
     _feedObserver = new MutationObserver(mutations => {
       // Use a Set to avoid double-counting when Instagram adds both a
@@ -218,7 +316,22 @@
       } else {
         newPosts.forEach(_sparseTick);
       }
-    }).observe(feed, { childList: true, subtree: true });
+    });
+    _feedObserver.observe(feed, { childList: true, subtree: true });
+
+    // Periodic sweep as a backstop against missed mutations:
+    // - Grid pages always (virtual scrolling remounts thumbnails between ticks)
+    // - All pages in nuke mode (home feed can also miss articles under React batching)
+    _gridSweepTimer = setInterval(() => {
+      const sel = _newPostSel(postSel);
+      const unseen = [...document.querySelectorAll(sel)];
+      if (!unseen.length) return;
+      if (DSS.state.nukeMode) {
+        unseen.forEach(DSS.nukePost);
+      } else if (isGridPage()) {
+        unseen.forEach(_sparseTick);
+      }
+    }, 1500);
   }
 
   // ── SPA navigation detection ──────────────────────────────
@@ -247,7 +360,7 @@
       if (isGridPage()) {
         setupObserver(feed, postSel);
         if (DSS.state.nukeMode) {
-          feed.querySelectorAll(`${postSel}:not([data-doom-scroll-post])`).forEach(DSS.nukePost);
+          feed.querySelectorAll(`${postSel}:not([data-doom-scroll-post]):not([data-doom-hidden])`).forEach(DSS.nukePost);
         }
         return;
       }
@@ -262,7 +375,7 @@
       // In normal mode do NOT bulk-tick already-loaded posts — only newly
       // arriving posts (observed additions) get the sparse treatment.
       if (DSS.state.nukeMode) {
-        feed.querySelectorAll(`${postSel}:not([data-doom-scroll-post])`).forEach(DSS.nukePost);
+        feed.querySelectorAll(`${postSel}:not([data-doom-scroll-post]):not([data-doom-hidden])`).forEach(DSS.nukePost);
       }
     }
 
@@ -271,9 +384,10 @@
       if (path === _lastPath) return;
       _lastPath = path;
 
-      // URL changed — drop the stale observer immediately.
-      if (_feedObserver) { _feedObserver.disconnect(); _feedObserver = null; }
-      if (_navTimer)     { clearTimeout(_navTimer);    _navTimer     = null; }
+      // URL changed — drop the stale observer and sweep timer immediately.
+      if (_feedObserver)   { _feedObserver.disconnect();       _feedObserver   = null; }
+      if (_gridSweepTimer) { clearInterval(_gridSweepTimer);  _gridSweepTimer = null; }
+      if (_navTimer)       { clearTimeout(_navTimer);         _navTimer       = null; }
       DSS.state.lastDoomPostTime = 0;
 
       // Remove ALL doom posts from the previous page — Instagram's React
@@ -346,6 +460,7 @@
     getFeedSel() { return 'main'; },
 
     buildPost(suggestion) { return buildPost(suggestion); },
+    buildGridPost(suggestion) { return buildGridPost(suggestion); },
 
     findInsertionPoint() { return findInsertionPoint(); },
 

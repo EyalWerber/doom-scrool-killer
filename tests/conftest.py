@@ -144,15 +144,8 @@ def _ensure_logged_in(page: Page, timeout_ms: int = 120_000):
     ig_pass = os.environ.get("INSTAGRAM_PASS")
 
     if ig_user and ig_pass:
-        user_inp.click()
-        user_inp.press_sequentially(ig_user, delay=80)
-        page.wait_for_timeout(400)
-
-        page.get_by_role("textbox", name="Password").click()
-        page.get_by_role("textbox", name="Password").press_sequentially(ig_pass, delay=80)
-        page.wait_for_timeout(600)
-
-        # Press Enter to submit — avoids needing to click the button
+        user_inp.fill(ig_user)
+        page.get_by_role("textbox", name="Password").fill(ig_pass)
         page.keyboard.press("Enter")
 
         try:
@@ -217,6 +210,18 @@ def ig_page(ctx):
         ctx,
         "https://www.instagram.com/",
         _read_mock("instagram.html"),
+    )
+    yield page
+    page.close()
+
+
+@pytest.fixture
+def ig_explore_page(ctx):
+    """Instagram explore grid (/explore/) with mock HTML."""
+    page = _open_mocked(
+        ctx,
+        "https://www.instagram.com/explore/",
+        _read_mock("instagram_explore.html"),
     )
     yield page
     page.close()

@@ -30,7 +30,7 @@
     document.querySelectorAll('video').forEach(v => { if (!v.paused) v.pause(); });
 
     const postSel = DSS.platform.getPostSel();
-    document.querySelectorAll(`${postSel}:not([data-doom-scroll-post])`).forEach(DSS.nukePost);
+    document.querySelectorAll(`${postSel}:not([data-doom-scroll-post]):not([data-doom-hidden])`).forEach(DSS.nukePost);
 
     DSS.showDoomPost('7-min-timer');
   }

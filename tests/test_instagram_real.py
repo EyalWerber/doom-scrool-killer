@@ -137,6 +137,131 @@ def test_doom_post_dismiss_on_real_instagram(ig_real_page: Page):
 
 
 # ---------------------------------------------------------------------------
+# Home feed — nuke mode replaces newly-loaded posts
+# ---------------------------------------------------------------------------
+
+def test_nuke_mode_nukes_new_posts_on_home_feed(real_ctx):
+    """
+    After the 7-min timer fires, posts loaded by infinite scroll must also be
+    nuked — not just the posts already visible when nuke activated.
+
+    Strategy: write timeFired=true into sessionStorage so the extension enters
+    nuke mode immediately on load (same code path as the real timer), then
+    scroll to trigger Instagram's infinite scroll and assert the new articles
+    are replaced within 5 seconds.
+    """
+    import time
+
+    page = real_ctx.new_page()
+    page.goto("https://www.instagram.com/", wait_until="domcontentloaded")
+    page.wait_for_selector("[data-doom-panel]", timeout=15_000)
+
+    # Plant the session flag then reload — restoreSession() picks it up and
+    # setupTimeTrigger() calls activateNuke() instead of starting a 7-min wait.
+    start_ms = int(time.time() * 1000) - 60 * 60 * 1000  # 1 hour ago
+    page.evaluate(f"""() => {{
+        sessionStorage.setItem('DSS_session', JSON.stringify({{
+            startTime:   {start_ms},
+            timeFired:   true,
+            nukeBypass:  false,
+            totalBypass: false,
+        }}));
+    }}""")
+    page.reload(wait_until="domcontentloaded")
+    page.wait_for_selector("[data-doom-panel]", timeout=15_000)
+
+    # Wait for nuke mode to activate (activateNuke is async — getSuggestions call).
+    page.wait_for_selector("[data-doom-scroll-post]", timeout=5_000)
+
+    # Instagram uses virtual scrolling — React unmounts articles above the
+    # viewport as new ones load below, so the DOM count stays roughly constant.
+    # Use a cumulative MutationObserver counter instead of a snapshot count.
+    page.evaluate("""() => {
+        window.__doomAdded = 0;
+        new MutationObserver(muts => {
+            for (const m of muts)
+                for (const n of m.addedNodes)
+                    if (n.nodeType === 1 && n.matches('[data-doom-scroll-post]'))
+                        window.__doomAdded++;
+        }).observe(document.body, { childList: true, subtree: true });
+    }""")
+
+    # Scroll down to trigger Instagram's infinite scroll.
+    for _ in range(4):
+        page.evaluate("window.scrollBy(0, window.innerHeight)")
+        page.wait_for_timeout(700)
+
+    # Within 5 seconds at least one new doom post must have been added.
+    try:
+        page.wait_for_function("() => window.__doomAdded > 0", timeout=5_000)
+    except Exception:
+        page.close()
+        pytest.fail("No new doom posts were added within 5 s after scrolling in nuke mode")
+
+    added = page.evaluate("() => window.__doomAdded")
+    page.close()
+    assert added > 0, f"Expected new doom posts after scroll, counter was {added}"
+
+
+# ---------------------------------------------------------------------------
+# Explore grid — nuke mode replaces newly-loaded thumbnails
+# ---------------------------------------------------------------------------
+
+def test_nuke_mode_nukes_new_posts_on_explore(real_ctx):
+    """
+    After the 7-min timer fires, thumbnail links loaded by infinite scroll on
+    /explore must also be nuked within 5 seconds.
+    """
+    import time
+
+    page = real_ctx.new_page()
+    page.goto("https://www.instagram.com/explore/", wait_until="domcontentloaded")
+    page.wait_for_selector("[data-doom-panel]", timeout=15_000)
+
+    start_ms = int(time.time() * 1000) - 60 * 60 * 1000
+    page.evaluate(f"""() => {{
+        sessionStorage.setItem('DSS_session', JSON.stringify({{
+            startTime:   {start_ms},
+            timeFired:   true,
+            nukeBypass:  false,
+            totalBypass: false,
+        }}));
+    }}""")
+    page.reload(wait_until="domcontentloaded")
+    page.wait_for_selector("[data-doom-panel]", timeout=15_000)
+
+    # Wait for nuke to activate on the already-visible thumbnails.
+    page.wait_for_selector("[data-doom-scroll-post]", timeout=5_000)
+
+    # Cumulative counter — immune to React's virtual-scroll unmounting.
+    page.evaluate("""() => {
+        window.__doomAdded = 0;
+        new MutationObserver(muts => {
+            for (const m of muts)
+                for (const n of m.addedNodes)
+                    if (n.nodeType === 1 && n.matches('[data-doom-scroll-post]'))
+                        window.__doomAdded++;
+        }).observe(document.body, { childList: true, subtree: true });
+    }""")
+
+    # Scroll to trigger Instagram's explore infinite scroll.
+    for _ in range(4):
+        page.evaluate("window.scrollBy(0, window.innerHeight)")
+        page.wait_for_timeout(700)
+
+    # Within 5 seconds at least one new doom post must have been added.
+    try:
+        page.wait_for_function("() => window.__doomAdded > 0", timeout=5_000)
+    except Exception:
+        page.close()
+        pytest.fail("No new doom posts were added within 5 s after scrolling explore in nuke mode")
+
+    added = page.evaluate("() => window.__doomAdded")
+    page.close()
+    assert added > 0, f"Expected new doom posts after scroll, counter was {added}"
+
+
+# ---------------------------------------------------------------------------
 # Account page — no doom posts before nuke
 # ---------------------------------------------------------------------------
 
@@ -147,7 +272,6 @@ def test_no_doom_post_on_account_page(real_ctx):
     """
     page = real_ctx.new_page()
     page.goto("https://www.instagram.com/instagram/", wait_until="domcontentloaded")
-    _ensure_logged_in(page)
     page.wait_for_selector("[data-doom-panel]", timeout=15_000)
 
     # Scroll a bit to let the extension settle
@@ -171,7 +295,6 @@ def test_reels_overlay_appears(real_ctx):
     """
     page = real_ctx.new_page()
     page.goto("https://www.instagram.com/reels/", wait_until="domcontentloaded")
-    _ensure_logged_in(page)
     page.wait_for_selector("[data-doom-panel]", timeout=15_000)
 
     # Force a doom post immediately via JS (bypasses the 30s cooldown for testing)
