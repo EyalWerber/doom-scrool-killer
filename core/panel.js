@@ -114,13 +114,17 @@
     nukeRow.className = 'bypass-row';
     const nukeLabel = document.createElement('div');
     nukeLabel.className = 'bypass-lbl';
-    nukeLabel.innerHTML = 'Nuke Bypass<small>Prevents 7-min takeover</small>';
+    nukeLabel.innerHTML = 'Nuke Bypass<small>Disables Nuke only</small>';
     const nukeSwitch = DSS.makeToggle(DSS.state.nukeBypass, checked => {
       DSS.state.nukeBypass = checked;
       DSS.saveSession();
       if (checked && DSS.state.nukeMode) {
+        // Bypass turned ON while nuke is active — de-nuke immediately.
         DSS.state.nukeMode = false;
         DSS.unNuke();
+      } else if (!checked && DSS.state.timeFired) {
+        // Bypass turned OFF after the timer already fired — re-enter nuke mode.
+        DSS.setupTimeTrigger();
       }
     });
     nukeRow.append(nukeLabel, nukeSwitch);
