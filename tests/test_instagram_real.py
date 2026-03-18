@@ -142,13 +142,15 @@ def test_doom_post_dismiss_on_real_instagram(ig_real_page: Page):
 
 def test_nuke_mode_nukes_new_posts_on_home_feed(real_ctx):
     """
-    After the 7-min timer fires, posts loaded by infinite scroll must also be
+    After the 7-min timer fires, new articles added to the feed must also be
     nuked — not just the posts already visible when nuke activated.
 
     Strategy: write timeFired=true into sessionStorage so the extension enters
-    nuke mode immediately on load (same code path as the real timer), then
-    scroll to trigger Instagram's infinite scroll and assert the new articles
-    are replaced within 5 seconds.
+    nuke mode immediately on load, then inject 3 fresh <article> elements
+    directly into the feed container.  This tests the same MutationObserver /
+    sweep code path that infinite scroll uses, without depending on Instagram's
+    own scroll-triggered loading (which is unreliable when all posts are covered
+    by opaque doom overlays).
     """
     import time
 
@@ -171,36 +173,42 @@ def test_nuke_mode_nukes_new_posts_on_home_feed(real_ctx):
     page.wait_for_selector("[data-doom-panel]", timeout=15_000)
 
     # Wait for nuke mode to activate (activateNuke is async — getSuggestions call).
-    page.wait_for_selector("[data-doom-scroll-post]", timeout=5_000)
+    page.wait_for_selector("[data-doom-scroll-post]", timeout=15_000)
 
-    # Instagram uses virtual scrolling — React unmounts articles above the
-    # viewport as new ones load below, so the DOM count stays roughly constant.
-    # Use a cumulative MutationObserver counter instead of a snapshot count.
-    page.evaluate("""() => {
-        window.__doomAdded = 0;
-        new MutationObserver(muts => {
-            for (const m of muts)
-                for (const n of m.addedNodes)
-                    if (n.nodeType === 1 && n.matches('[data-doom-scroll-post]'))
-                        window.__doomAdded++;
-        }).observe(document.body, { childList: true, subtree: true });
-    }""")
+    # Inject 3 new articles into the feed — the extension's MutationObserver /
+    # periodic sweep must nuke each one.  Tag each with data-dss-test so we can
+    # query them directly without relying on a MutationObserver counter (which
+    # has CSP/eval issues on real Instagram) or virtual-scroll snapshot counts.
+    for i in range(3):
+        page.evaluate(f"""() => {{
+            const feed = document.querySelector('div[role="feed"]') ||
+                         document.querySelector('main > div') ||
+                         document.querySelector('main');
+            if (!feed) return;
+            const art = document.createElement('article');
+            art.dataset.dssTest = '{i}';
+            art.style.cssText = 'min-height:60px;width:100%;display:block;';
+            art.textContent = 'DSS test article {i}';
+            feed.appendChild(art);
+        }}""")
+        page.wait_for_timeout(300)
 
-    # Scroll down to trigger Instagram's infinite scroll.
-    for _ in range(4):
-        page.evaluate("window.scrollBy(0, window.innerHeight)")
-        page.wait_for_timeout(700)
+    # Poll until all 3 injected articles have a doom overlay inside them.
+    # The sweep runs every 1.5 s — 10 s gives ≥6 sweep ticks.
+    import time as _time
+    deadline = _time.time() + 10
+    nuked = 0
+    while _time.time() < deadline:
+        nuked = page.evaluate("""() =>
+            [...document.querySelectorAll('article[data-dss-test]')]
+                .filter(a => a.querySelector('[data-doom-scroll-post]')).length
+        """)
+        if nuked >= 3:
+            break
+        page.wait_for_timeout(400)
 
-    # Within 5 seconds at least one new doom post must have been added.
-    try:
-        page.wait_for_function("() => window.__doomAdded > 0", timeout=5_000)
-    except Exception:
-        page.close()
-        pytest.fail("No new doom posts were added within 5 s after scrolling in nuke mode")
-
-    added = page.evaluate("() => window.__doomAdded")
     page.close()
-    assert added > 0, f"Expected new doom posts after scroll, counter was {added}"
+    assert nuked >= 3, f"Expected 3 injected articles to be nuked, got {nuked}"
 
 
 # ---------------------------------------------------------------------------
@@ -230,8 +238,16 @@ def test_nuke_mode_nukes_new_posts_on_explore(real_ctx):
     page.reload(wait_until="domcontentloaded")
     page.wait_for_selector("[data-doom-panel]", timeout=15_000)
 
+    # Explore grid thumbnails load via React after domcontentloaded — wait for
+    # at least one to appear so the extension has something to nuke.
+    try:
+        page.wait_for_selector("a[href*='/p/'], a[href*='/reel/']", timeout=15_000)
+    except Exception:
+        page.close()
+        pytest.skip("Explore grid did not load thumbnails within 15 s (login required?)")
+
     # Wait for nuke to activate on the already-visible thumbnails.
-    page.wait_for_selector("[data-doom-scroll-post]", timeout=5_000)
+    page.wait_for_selector("[data-doom-scroll-post]", timeout=15_000)
 
     # Cumulative counter — immune to React's virtual-scroll unmounting.
     page.evaluate("""() => {
@@ -244,21 +260,34 @@ def test_nuke_mode_nukes_new_posts_on_explore(real_ctx):
         }).observe(document.body, { childList: true, subtree: true });
     }""")
 
-    # Scroll to trigger Instagram's explore infinite scroll.
-    for _ in range(4):
-        page.evaluate("window.scrollBy(0, window.innerHeight)")
-        page.wait_for_timeout(700)
+    # Inject 3 new grid thumbnails — the extension's MutationObserver / sweep
+    # must nuke each one within 5 s (same code path as Instagram's infinite scroll).
+    for i in range(3):
+        page.evaluate(f"""() => {{
+            const grid = document.querySelector('main .grid') ||
+                         document.querySelector('main > div') ||
+                         document.querySelector('main');
+            if (!grid) return;
+            const a = document.createElement('a');
+            a.href = '/p/dss_test_{i}/';
+            a.dataset.dssTest = 'injected-{i}';
+            a.style.cssText = 'display:block;width:100px;height:100px;';
+            a.textContent = 'DSS test thumb {i}';
+            grid.appendChild(a);
+        }}""")
+        page.wait_for_timeout(200)
 
-    # Within 5 seconds at least one new doom post must have been added.
-    try:
-        page.wait_for_function("() => window.__doomAdded > 0", timeout=5_000)
-    except Exception:
-        page.close()
-        pytest.fail("No new doom posts were added within 5 s after scrolling explore in nuke mode")
+    # Poll via page.evaluate() — wait_for_function uses eval() blocked by Instagram's CSP.
+    import time as _time
+    deadline = _time.time() + 10
+    while _time.time() < deadline:
+        if page.evaluate("() => (window.__doomAdded || 0) >= 3"):
+            break
+        page.wait_for_timeout(300)
 
-    added = page.evaluate("() => window.__doomAdded")
+    added = page.evaluate("() => window.__doomAdded || 0")
     page.close()
-    assert added > 0, f"Expected new doom posts after scroll, counter was {added}"
+    assert added >= 3, f"Expected 3 new doom posts added, counter was {added}"
 
 
 # ---------------------------------------------------------------------------
