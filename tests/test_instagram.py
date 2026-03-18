@@ -26,54 +26,44 @@ def test_panel_shows_instagram_site(ig_page: Page):
 
 
 # ---------------------------------------------------------------------------
-# Post count trigger
+# Sparse post replacement (1-in-5-to-9)
 # ---------------------------------------------------------------------------
 
-def test_doom_post_appears_after_enough_new_posts(ig_page: Page):
-    """
-    Adding 12 articles to the Instagram feed triggers at least one doom post
-    (threshold is 5–10, so 12 guarantees at least one trigger).
-    """
-    ig_page.evaluate(
-        "document.querySelectorAll('[data-doom-scroll-post]').forEach(el => el.remove())"
-    )
-
-    for i in range(12):
-        ig_page.evaluate("""(i) => {
+def _add_articles(page: Page, count: int, prefix: str = "", delay_ms: int = 60):
+    """Append `count` <article> elements to the Instagram mock feed."""
+    for i in range(count):
+        page.evaluate("""([i, prefix]) => {
             const feed = document.querySelector('main #feed') || document.querySelector('main > div');
             if (!feed) return;
             const article = document.createElement('article');
             article.dataset.dynamic = 'true';
-            article.dataset.idx = i;
-            article.textContent = 'Dynamic post ' + i;
+            article.dataset.idx = prefix + i;
+            article.textContent = 'Dynamic post ' + prefix + i;
             feed.appendChild(article);
-        }""", i)
-        ig_page.wait_for_timeout(60)
+        }""", [i, prefix])
+        if delay_ms:
+            page.wait_for_timeout(delay_ms)
+
+
+def test_sparse_doom_appears_in_feed(ig_page: Page):
+    """
+    Adding 12 articles triggers at least one sparse doom post inserted before
+    a real post. Sparse counter starts at 5–9, so 12 posts guarantees one hit.
+    """
+    _add_articles(ig_page, 12)
 
     ig_page.wait_for_selector("[data-doom-scroll-post]", timeout=6_000)
+
     count = ig_page.locator("[data-doom-scroll-post]").count()
-    assert count >= 1
+    assert count >= 1, f"Expected ≥1 doom post, got {count}"
 
 
-def test_multiple_doom_posts_appear(ig_page: Page):
+def test_sparse_doom_appears_multiple_times(ig_page: Page):
     """
-    Without the one-at-a-time guard, two or more doom posts appear for 25+ new posts.
+    Adding 20 articles triggers at least 2 sparse doom posts.
+    Worst case: counter starts at 9, resets to 9 → hits at posts 9 and 18.
     """
-    ig_page.evaluate(
-        "document.querySelectorAll('[data-doom-scroll-post]').forEach(el => el.remove())"
-    )
-
-    for i in range(25):
-        ig_page.evaluate("""(i) => {
-            const feed = document.querySelector('main #feed') || document.querySelector('main > div');
-            if (!feed) return;
-            const article = document.createElement('article');
-            article.dataset.dynamic = 'true';
-            article.dataset.idx = 'multi-' + i;
-            article.textContent = 'Post ' + i;
-            feed.appendChild(article);
-        }""", i)
-        ig_page.wait_for_timeout(50)
+    _add_articles(ig_page, 20, prefix="m", delay_ms=50)
 
     ig_page.wait_for_timeout(1_500)
 

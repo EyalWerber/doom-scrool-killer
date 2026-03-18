@@ -172,8 +172,29 @@
   // Videos blurred by the reels overlay — tracked for nav cleanup.
   let _reelBlurredVideos = [];
 
-  // Pure observer setup — does NOT touch postsSeen/nextTriggerAt.
-  // Callers own seeding so that SPA navigation can control the baseline.
+  // Countdown to the next sparse replacement: decrement per new post,
+  // replace when it hits 0, then reset to a fresh 5–9 value.
+  let _sparseNext = 5 + Math.floor(Math.random() * 5);
+
+  // Stamp a post as "decided" so it is never ticked again — even if Instagram's
+  // React re-renders the feed and re-adds its own articles as fresh DOM nodes.
+  // (Re-renders happen when we mutate the feed, e.g. hiding a post.)
+  // Both "skip" and "replace" decisions stamp the node.
+  function _sparseTick(post) {
+    if (post.hasAttribute('data-dss-seen')) return;
+    post.setAttribute('data-dss-seen', '');
+    _sparseNext--;
+    if (_sparseNext <= 0) {
+      _sparseNext = 5 + Math.floor(Math.random() * 5);
+      DSS.sparseDoomPost(post);
+    }
+  }
+
+  // Selector that excludes both doom posts and already-decided real posts.
+  function _newPostSel(postSel) {
+    return `${postSel}:not([data-doom-scroll-post]):not([data-dss-seen])`;
+  }
+
   function setupObserver(feed, postSel) {
     if (_feedObserver) { _feedObserver.disconnect(); _feedObserver = null; }
 
@@ -181,13 +202,12 @@
       // Use a Set to avoid double-counting when Instagram adds both a
       // wrapper div AND the article inside it in the same mutation batch.
       const newPostSet = new Set();
+      const sel = _newPostSel(postSel);
       for (const m of mutations) {
         for (const node of m.addedNodes) {
           if (node.nodeType !== Node.ELEMENT_NODE) continue;
-          if (node.matches?.(postSel) && !node.hasAttribute('data-doom-scroll-post'))
-            newPostSet.add(node);
-          if (node.querySelectorAll)
-            node.querySelectorAll(`${postSel}:not([data-doom-scroll-post])`).forEach(n => newPostSet.add(n));
+          if (node.matches?.(sel)) newPostSet.add(node);
+          if (node.querySelectorAll) node.querySelectorAll(sel).forEach(n => newPostSet.add(n));
         }
       }
       const newPosts = [...newPostSet];
@@ -196,11 +216,7 @@
       if (DSS.state.nukeMode) {
         newPosts.forEach(DSS.nukePost);
       } else {
-        DSS.state.postsSeen += newPosts.length;
-        if (DSS.state.postsSeen >= DSS.state.nextTriggerAt) {
-          DSS.state.nextTriggerAt = DSS.newTriggerAt();
-          DSS.showDoomPost('post-count');
-        }
+        newPosts.forEach(_sparseTick);
       }
     }).observe(feed, { childList: true, subtree: true });
   }
@@ -236,27 +252,17 @@
         return;
       }
 
-      // Fresh counters — this is a new page visit.
-      DSS.state.postsSeen     = 0;
-      DSS.state.nextTriggerAt = DSS.newTriggerAt();
+      // Fresh sparse counter — this is a new page visit.
+      _sparseNext = 5 + Math.floor(Math.random() * 5);
 
       // Watch for posts added after this moment.
       setupObserver(feed, postSel);
 
-      // Count posts already in the DOM as new (they belong to the new page).
-      const alreadyLoaded = [
-        ...feed.querySelectorAll(`${postSel}:not([data-doom-scroll-post])`),
-      ];
-      if (alreadyLoaded.length) {
-        if (DSS.state.nukeMode) {
-          alreadyLoaded.forEach(DSS.nukePost);
-        } else {
-          DSS.state.postsSeen += alreadyLoaded.length;
-          if (DSS.state.postsSeen >= DSS.state.nextTriggerAt) {
-            DSS.state.nextTriggerAt = DSS.newTriggerAt();
-            DSS.showDoomPost('post-count');
-          }
-        }
+      // In nuke mode, immediately replace posts already in the DOM.
+      // In normal mode do NOT bulk-tick already-loaded posts — only newly
+      // arriving posts (observed additions) get the sparse treatment.
+      if (DSS.state.nukeMode) {
+        feed.querySelectorAll(`${postSel}:not([data-doom-scroll-post])`).forEach(DSS.nukePost);
       }
     }
 
@@ -274,6 +280,7 @@
       // replaces the feed content but may leave the doom post's parent node
       // intact, causing stale posts to persist into the next page visit.
       document.querySelectorAll('[data-doom-scroll-post]').forEach(el => el.remove());
+      document.querySelectorAll('[data-dss-seen]').forEach(el => el.removeAttribute('data-dss-seen'));
       _reelBlurredVideos.forEach(v => v.style.removeProperty('filter'));
       _reelBlurredVideos = [];
 
@@ -402,16 +409,12 @@
 
       const feed = document.querySelector(feedSel);
       if (feed) {
-        DSS.state.postsSeen     = feed.querySelectorAll(postSel).length;
-        DSS.state.nextTriggerAt = DSS.newTriggerAt();
         setupObserver(feed, postSel);
       } else {
         new MutationObserver((_, obs) => {
           const f = document.querySelector(feedSel);
           if (f) {
             obs.disconnect();
-            DSS.state.postsSeen     = f.querySelectorAll(postSel).length;
-            DSS.state.nextTriggerAt = DSS.newTriggerAt();
             setupObserver(f, postSel);
           }
         }).observe(document.body, { childList: true, subtree: true });
